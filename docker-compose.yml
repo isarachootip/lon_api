@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lon_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - lon_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:////app/data/lon_database.db
+      - INTERNAL_AUTH_TOKEN=${INTERNAL_AUTH_TOKEN:-super-secret-thai-watsadu-token}
+      - EGG_LON_API_URL=${EGG_LON_API_URL:-https://smsapi-smscloud.eggdigital.com/lon/v2/send}
+      - EGG_WEBHOOK_FORWARD_URL=${EGG_WEBHOOK_FORWARD_URL:-https://dr-smscloud.eggdigital.com/line/webhook}
+      
+      # TEST Environment
+      - EGG_LON_TEST_API_KEY=${EGG_LON_TEST_API_KEY}
+      - EGG_LON_TEST_SENDER_ID=${EGG_LON_TEST_SENDER_ID}
+      - EGG_LON_TEST_TEMPLATE_ID_DELIVERY=${EGG_LON_TEST_TEMPLATE_ID_DELIVERY}
+      - EGG_LON_TEST_TEMPLATE_ID_SHIPMENT_COMPLETE=${EGG_LON_TEST_TEMPLATE_ID_SHIPMENT_COMPLETE}
+      - EGG_LON_TEST_TEMPLATE_ID_ORDER_CONFIRMATION=${EGG_LON_TEST_TEMPLATE_ID_ORDER_CONFIRMATION}
+      - EGG_LON_TEST_TEMPLATE_ID_PAYMENT_COMPLETE=${EGG_LON_TEST_TEMPLATE_ID_PAYMENT_COMPLETE}
+      - EGG_LON_TEST_TEMPLATE_ID_PAYMENT_FAILURE=${EGG_LON_TEST_TEMPLATE_ID_PAYMENT_FAILURE}
+      - EGG_LON_TEST_TEMPLATE_ID_PAYMENT_REMINDER=${EGG_LON_TEST_TEMPLATE_ID_PAYMENT_REMINDER}
+      - EGG_LON_TEST_TEMPLATE_ID_APPLICATION_STATUS=${EGG_LON_TEST_TEMPLATE_ID_APPLICATION_STATUS}
+      - EGG_LON_TEST_TEMPLATE_ID_RESERVATION=${EGG_LON_TEST_TEMPLATE_ID_RESERVATION}
+      
+      # PROD Environment
+      - EGG_LON_PROD_API_KEY=${EGG_LON_PROD_API_KEY}
+      - EGG_LON_PROD_SENDER_ID=${EGG_LON_PROD_SENDER_ID}
+      - EGG_LON_PROD_TEMPLATE_ID_DELIVERY=${EGG_LON_PROD_TEMPLATE_ID_DELIVERY}
+      - EGG_LON_PROD_TEMPLATE_ID_SHIPMENT_COMPLETE=${EGG_LON_PROD_TEMPLATE_ID_SHIPMENT_COMPLETE}
+      - EGG_LON_PROD_TEMPLATE_ID_ORDER_CONFIRMATION=${EGG_LON_PROD_TEMPLATE_ID_ORDER_CONFIRMATION}
+      - EGG_LON_PROD_TEMPLATE_ID_PAYMENT_COMPLETE=${EGG_LON_PROD_TEMPLATE_ID_PAYMENT_COMPLETE}
+      - EGG_LON_PROD_TEMPLATE_ID_PAYMENT_FAILURE=${EGG_LON_PROD_TEMPLATE_ID_PAYMENT_FAILURE}
+      - EGG_LON_PROD_TEMPLATE_ID_PAYMENT_REMINDER=${EGG_LON_PROD_TEMPLATE_ID_PAYMENT_REMINDER}
+      - EGG_LON_PROD_TEMPLATE_ID_APPLICATION_STATUS=${EGG_LON_PROD_TEMPLATE_ID_APPLICATION_STATUS}
+      - EGG_LON_PROD_TEMPLATE_ID_RESERVATION=${EGG_LON_PROD_TEMPLATE_ID_RESERVATION}
+      
+      # SMS Gateway
+      - SMS_GATEWAY_URL=${SMS_GATEWAY_URL:-https://smsapi-smscloud.eggdigital.com/sms/v1/send}
+      - SMS_GATEWAY_API_KEY=${SMS_GATEWAY_API_KEY}
+      - SMS_GATEWAY_SENDER_ID=${SMS_GATEWAY_SENDER_ID}
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lon_dashboard
+    command: streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    volumes:
+      - lon_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:////app/data/lon_database.db
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  lon_data:
